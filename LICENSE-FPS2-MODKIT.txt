@@ -1,0 +1,9 @@
+# FPS2 ModKit — Evaluation Prototype
+
+This release of the FPS2 ModKit is provided as an **evaluation prototype** for testing, mod development, and community feedback.
+
+The ModKit is a work in progress and does not constitute a final commercial release.
+
+The **FPS2 ModKit binaries, proprietary code, and proprietary assets** may not be commercially distributed, sold, sublicensed, or otherwise used for commercial redistribution without explicit permission from the copyright holder.
+
+Third-party components included with the ModKit are subject to their respective licenses. See `LICENSES.txt` for details.

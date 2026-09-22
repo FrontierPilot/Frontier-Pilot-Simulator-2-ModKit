@@ -1,0 +1,89 @@
+﻿{
+    "FileVersion":  3,
+    "Version":  1,
+    "VersionName":  "1.0",
+    "FriendlyName":  "FlightPhysics",
+    "Description":  "",
+    "Category":  "Other",
+    "CreatedBy":  "",
+    "CreatedByURL":  "",
+    "DocsURL":  "",
+    "MarketplaceURL":  "",
+    "SupportURL":  "",
+    "CanContainContent":  true,
+    "IsBetaVersion":  false,
+    "IsExperimentalVersion":  false,
+    "Modules":  [
+                    {
+                        "Name":  "FlightPhysics",
+                        "Type":  "Runtime",
+                        "LoadingPhase":  "Default"
+                    },
+                    {
+                        "Name":  "FlightPhysicsUncookedOnly",
+                        "Type":  "UncookedOnly",
+                        "LoadingPhase":  "PreDefault"
+                    },
+                    {
+                        "Name":  "FlightPhysicsEditor",
+                        "Type":  "Editor",
+                        "LoadingPhase":  "PostEngineInit"
+                    }
+                ],
+    "Plugins":  [
+                    {
+                        "Name":  "GameFeatures",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "GameplayAbilities",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "OnlineSubsystem",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "OnlineSubsystemUtils",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "GameplayCameras",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "OnlineSubsystemEOS",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "GeoReferencing",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "EnhancedInput",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "CommonUI",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "JoystickPlugin",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "HUDLoadingScreen",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "ModelViewViewModel",
+                        "Enabled":  true
+                    },
+                    {
+                        "Name":  "GameplayMessageRouter",
+                        "Enabled":  true
+                    }
+                ],
+    "Installed":  true,
+    "EnabledByDefault":  true
+}

@@ -1,0 +1,34 @@
+Copyright © RAZAR s.r.o., 2025
+
+Unreal Engine
+This project uses Unreal Engine.
+Unreal Engine © Epic Games, Inc. All rights reserved.
+Licensed under the [Unreal® Engine End User License Agreement](https://www.unrealengine.com/eula).
+
+JSBSim
+This project uses JSBSim, an open-source Flight Dynamics Model (FDM).
+JSBSim is licensed under the GNU Lesser General Public License (LGPL v2.1).
+Source code and license are available at:
+https://github.com/JSBSim-Team/jsbsim?tab=LGPL-2.1-1-ov-file#readme
+
+SDL2
+This project uses SDL2 (Simple DirectMedia Layer) through the JoystickPlugin.
+SDL2 © 1997-2026 Sam Lantinga and contributors, licensed under the zlib license.
+Source code and license are available at:
+https://github.com/libsdl-org/SDL
+The license text ships next to the library: Plugins/JoystickPlugin/Source/ThirdParty/SDL2/Win64/LICENSE.txt
+
+SDL_GameControllerDB
+This project uses gamecontrollerdb.txt (controller mapping database) through the JoystickPlugin.
+SDL_GameControllerDB © Sam Lantinga and contributors, licensed under the zlib license.
+Source and license are available at:
+https://github.com/mdqinc/SDL_GameControllerDB
+
+JoystickPlugin
+This project uses JoystickPlugin by Jayden Maalouf (Fab).
+Licensed under the MIT License with Attribution.
+The license text ships with the plugin: Plugins/JoystickPlugin/LICENSE
+
+Gameplay Message Subsystem (GameplayMessageRouter)
+This plugin is © Epic Games, Inc. and is distributed as Unreal Engine sample code
+under the Unreal® Engine End User License Agreement (https://www.unrealengine.com/eula).

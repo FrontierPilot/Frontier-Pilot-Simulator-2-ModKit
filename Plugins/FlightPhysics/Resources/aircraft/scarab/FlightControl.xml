@@ -1,0 +1,319 @@
+<?xml version="1.0"?>
+<flight_control name="FCS: Scarab Plane">
+  <property>fcs/left-brake-input-norm</property>
+  <property>fcs/right-brake-input-norm</property>
+
+    <channel name="Speedbrake">
+        <!-- Speedbrake mechanization: the single source of the speedbrake POSITION, shared by the
+             model and the game's animation stream.
+             fcs/speedbrake-cmd-norm is an instant 0/1 request (the game sets it with SetDsbCmd),
+             and a real speedbrake cannot snap to it, so this kinematic block drives
+             fcs/speedbrake-pos-norm from 0 to 1 over 0.6 s - and back over the same traverse.
+             Consumers of the SAME mechanized value:
+               - aerodynamics reads fcs/speedbrake-pos-norm (Aero.xml: drag, lift, pitch moment);
+               - the game reads it as the animation input:
+                 FSpeedbrakeController::OnPostSimulationTick publishes AnimationState.SpeedbrakeAnim
+                 (GetDsbPos(ofNorm)) and USpeedbrakeControlChannel republishes it as
+                 AnimationInput.Speedbrake (range 0..1, neutral 0).
+             Do NOT add smoothing on the animation side: the travel time is set HERE only.
+             The traverse times are the single place to tune speedbrake travel speed. -->
+        <kinematic name="Speedbrake Control">
+            <input>fcs/speedbrake-cmd-norm</input>
+            <traverse>
+                <setting>
+                    <position> 0.0 </position>
+                    <time> 0.0 </time>
+                </setting>
+                <setting>
+                    <position> 1.0 </position>
+                    <time> 0.6 </time>
+                </setting>
+            </traverse>
+            <output>fcs/speedbrake-pos-norm</output>
+            </kinematic>
+    </channel>
+
+   <channel name="Wheel Brakes">
+        <kinematic name="Left Brake Control">
+            <input>fcs/left-brake-input-norm</input>
+            <traverse>
+                <setting>
+                    <position> 0.0 </position>
+                    <time> 0.0 </time>
+                </setting>
+                <setting>
+                    <position> 1.0 </position>
+                    <time> 7.5 </time> 
+                </setting>
+            </traverse>
+            <output>fcs/left-brake-cmd-norm</output> 
+        </kinematic>
+
+        <kinematic name="Right Brake Control">
+            <input>fcs/right-brake-input-norm</input>
+            <traverse>
+                <setting>
+                    <position> 0.0 </position>
+                    <time> 0.0 </time>
+                </setting>
+                <setting>
+                    <position> 1.0 </position>
+                    <time> 7.5 </time>
+                </setting>
+            </traverse>
+            <output>fcs/right-brake-cmd-norm</output>
+        </kinematic>
+    </channel>
+
+
+
+    <channel name="Pitch">
+        <summer name="Pitch Trim Sum">
+            <input>fcs/elevator-cmd-norm</input>
+            <input>fcs/pitch-trim-cmd-norm</input>
+            <clipto>
+                <min>-1</min>
+                <max>1</max>
+            </clipto>
+        </summer>
+
+        <!-- Elevator command: instant position request. The surface position consumed by the rest
+             of the model is produced by the actuator below, not by this block. -->
+        <aerosurface_scale name="Elevator Control">
+            <input>fcs/pitch-trim-sum</input>
+            <gain>0.01745</gain>
+            <range>
+                <min>-28</min>
+                <max>23</max>
+            </range>
+            <output>fcs/elevator-cmd-rad</output>
+        </aerosurface_scale>
+
+        <!-- Elevator actuator: tail mechanization (slew rate limit).
+             The block above is an instant position request. A real elevator cannot snap to it, it
+             travels to the commanded position at a limited speed, so the request is passed through
+             an actuator before it becomes the surface position used by the rest of the model.
+             Physics and animation therefore show the same angle: the aerodynamics reads
+             fcs/elevator-pos-rad (Aero.xml), and the "position normalized" block below converts the
+             degree form of that same rate-limited position into fcs/elevator-pos-norm, which the
+             game publishes as AnimationInput.Elevator (see UElevatorControlChannel).
+
+             rate_limit unit = radians per second (0.01745 rad = 1 deg). 0.698 rad/s equals 40 deg/s:
+             full travel over the -28..23 deg range takes ~0.7 s. This constant is the single place
+             to tune elevator deflection speed. -->
+        <actuator name="Elevator Actuator">
+            <input>fcs/elevator-cmd-rad</input>
+            <rate_limit> 0.698 </rate_limit>
+            <output>fcs/elevator-pos-rad</output>
+        </actuator>
+
+        <aerosurface_scale name="Elevator position normalized">
+             <!-- Normalized elevator position published to the animation layer.
+                  Contract: range -1..1, neutral 0. This is what the game reads as
+                  AnimationInput.Elevator (UElevatorControlChannel) and what the animation Blend
+                  Space consumes as its axis value directly, so changing the -1..1 range requires an
+                  animation-side change too. domain must stay in sync with the command range above
+                  and the input is the degree form of the ACTUATOR output, not the raw command.
+                  NOTE: the domain is not symmetric (-28..23 deg), so zero deflection maps to
+                  fcs/elevator-pos-norm 0.0 while the positive and negative halves are scaled
+                  separately (the aerosurface_scale maps each half against its own limit) - the same
+                  convention the ailerons use. -->
+             <input>fcs/elevator-pos-deg</input>
+             <domain>
+                 <min>-28</min>
+                 <max>23</max>
+             </domain>
+             <range>
+                  <min>-1</min>
+                  <max>1</max>
+             </range>
+             <output>fcs/elevator-pos-norm</output>
+         </aerosurface_scale>
+    </channel>
+
+    <channel name="Roll">
+        <summer name="Roll Trim Sum">
+            <input>fcs/aileron-cmd-norm</input>
+            <input>fcs/roll-trim-cmd-norm</input>
+            <clipto>
+                <min>-1</min>
+                <max>1</max>
+            </clipto>
+        </summer>
+
+        <aerosurface_scale name="Left Aileron Control">
+            <input>fcs/roll-trim-sum</input>
+            <gain>0.01745</gain>
+            <range>
+                <min>-20</min>
+                <max>15</max>
+            </range>
+            <output>fcs/left-aileron-cmd-rad</output>
+        </aerosurface_scale>
+
+        <!-- Aileron actuator: wing mechanization (slew rate limit).
+             The command above is an instant position request. A real aileron cannot snap to it, it
+             travels to the commanded position at a limited speed, so the request is passed through
+             an actuator before it becomes the surface position used by the rest of the model.
+
+             rate_limit unit = radians per second (0.01745 rad = 1 deg). 0.698 rad/s equals 40 deg/s:
+             full travel takes ~0.375 s down (15 deg) and ~0.5 s up (20 deg). This constant is the
+             single place to tune aileron deflection speed. -->
+        <actuator name="Left Aileron Actuator">
+            <input>fcs/left-aileron-cmd-rad</input>
+            <rate_limit> 0.698 </rate_limit>
+            <output>fcs/left-aileron-pos-rad</output>
+        </actuator>
+
+        <aerosurface_scale name="Right Aileron Control">
+            <input>fcs/roll-trim-sum</input>
+            <gain>0.01745</gain>
+            <range>
+                <min> 15 </min>
+                <max> -20 </max>
+            </range>
+            <output>fcs/right-aileron-cmd-rad</output>
+        </aerosurface_scale>
+
+        <!-- Right aileron actuator: same wing mechanization as the left one.
+             The right surface is the mirror of the left (its range is reversed above, DaR == -DaL),
+             so it uses the same rate_limit. Note that the aerodynamics only consumes
+             fcs/left-aileron-pos-rad, therefore this actuator affects the visual surface motion.
+             See the detailed comment on the left actuator. -->
+        <actuator name="Right Aileron Actuator">
+            <input>fcs/right-aileron-cmd-rad</input>
+            <rate_limit> 0.698 </rate_limit>
+            <output>fcs/right-aileron-pos-rad</output>
+        </actuator>
+
+        <!-- Normalized surface position published to the animation layer.
+             Contract: range -1..1, neutral 0. This is what the game reads as AnimationInput.Aileron
+             (see UAileronControlChannel) and what the animation Blend Space consumes as its axis
+             value directly, so any change of the -1..1 range requires an animation-side change too.
+             The domain is the surface travel in degrees and must stay in sync with the range of the
+             command block above. -->
+        <aerosurface_scale name="Left Aileron position normalized">
+            <input>fcs/left-aileron-pos-deg</input>
+            <domain>
+                <min>-20</min>
+                <max>15</max>
+            </domain>
+            <range>
+                <min>-1</min> 
+                <max>1</max>
+            </range>
+            <output>fcs/left-aileron-pos-norm</output>
+        </aerosurface_scale>
+
+        <!-- Right aileron normalized position: same purpose and contract as the left one above. -->
+        <aerosurface_scale name="Right Aileron position normalized">
+            <input>fcs/right-aileron-pos-deg</input>
+            <domain>
+                <min>-20</min> 
+                <max>15</max>
+            </domain>
+            <range>
+                <min>-1</min>
+                <max>1</max>
+            </range>
+            <output>fcs/right-aileron-pos-norm</output>
+        </aerosurface_scale>
+    </channel>
+
+    <channel name="Yaw">
+        <summer name="Yaw Trim Sum">
+            <input>fcs/rudder-cmd-norm</input>
+            <input>fcs/yaw-trim-cmd-norm</input>
+            <clipto>
+                <min>-1</min>
+                <max>1</max>
+            </clipto>
+        </summer>
+
+        <aerosurface_scale name="Rudder Control">
+            <input>fcs/yaw-trim-sum</input>
+            <gain>0.01745</gain>
+            <range>
+                <min>-25</min>
+                <max>25</max>
+            </range>
+            <output>fcs/rudder-cmd-rad</output>
+        </aerosurface_scale>
+
+        <!-- Rudder actuator: tail mechanization (slew rate limit).
+             The block above is an instant position request. A real rudder cannot snap to it, it
+             travels to the commanded position at a limited speed, so the request is passed through
+             an actuator before it becomes the surface position used by the rest of the model.
+             Physics and animation therefore show the same angle: the aerodynamics reads
+             fcs/rudder-pos-rad (Aero.xml), and the "position normalized" block below converts the
+             degree form of that same rate-limited position into fcs/rudder-pos-norm, which the game
+             publishes as AnimationInput.Rudder (see URudderControlChannel).
+
+             rate_limit unit = radians per second (0.01745 rad = 1 deg). 0.576 rad/s equals 33 deg/s:
+             full travel over the symmetric +-25 deg range takes ~0.76 s. This constant is the single
+             place to tune rudder deflection speed. -->
+        <actuator name="Rudder Actuator">
+            <input>fcs/rudder-cmd-rad</input>
+            <rate_limit> 0.576 </rate_limit>
+            <output>fcs/rudder-pos-rad</output>
+        </actuator>
+
+        <aerosurface_scale name="Rudder position normalized">
+             <!-- Normalized rudder position published to the animation layer.
+                  Contract: range -1..1, neutral 0. This is what the game reads as
+                  AnimationInput.Rudder (URudderControlChannel) and what the animation Blend Space
+                  consumes as its axis value directly, so changing the -1..1 range requires an
+                  animation-side change too. The domain must stay in sync with the command range
+                  above; the input is the degree form of the ACTUATOR output, not the raw command. -->
+             <input>fcs/rudder-pos-deg</input>
+             <domain>
+                  <min>-25</min>
+                  <max>25</max>
+             </domain>
+             <range>
+                  <min>-1</min>
+                  <max>1</max>
+             </range>
+             <output>fcs/rudder-pos-norm</output>
+        </aerosurface_scale>
+    </channel>
+
+    <channel name="Flaps">
+        <kinematic name="Flaps Control">
+            <input>fcs/flap-cmd-norm</input>
+            <traverse>
+                <setting>
+                    <position>0</position>
+                    <time>0</time>
+                </setting>
+                <setting>
+                    <position>10</position>
+                    <time>2</time>
+                </setting>
+                <setting>
+                    <position>20</position>
+                    <time>1</time>
+                </setting>
+                <setting>
+                    <position>30</position>
+                    <time>1</time>
+                </setting>
+            </traverse>
+            <output>fcs/flap-pos-deg</output>
+        </kinematic>
+
+        <aerosurface_scale name="Flap position normalized">
+             <input>fcs/flap-pos-deg</input>
+             <domain>
+                <min>0</min>
+                <max>30</max>
+             </domain>
+             <range>
+                 <min>0</min>
+                 <max>1</max>
+             </range>
+             <output>fcs/flap-pos-norm</output>
+        </aerosurface_scale>
+    </channel>
+    
+</flight_control>

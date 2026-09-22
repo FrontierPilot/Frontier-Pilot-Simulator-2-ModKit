@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<flight_control name="FCS: Scarab Plane">
+  <property>fcs/left-brake-input-norm</property>
+  <property>fcs/right-brake-input-norm</property>
+
+    <channel name="Speedbrake">
+        <!-- Speedbrake mechanization: the single source of the speedbrake POSITION, shared by the
+             model and the game's animation stream.
+             fcs/speedbrake-cmd-norm is an instant 0/1 request (the game sets it with SetDsbCmd),
+             and a real speedbrake cannot snap to it, so this kinematic block drives
+             fcs/speedbrake-pos-norm from 0 to 1 over 0.6 s - and back over the same traverse.
+             Consumers of the SAME mechanized value:
+               - aerodynamics reads fcs/speedbrake-pos-norm (Aero.xml: drag, lift, pitch moment);
+               - the game reads it as the animation input:
+                 FSpeedbrakeController::OnPostSimulationTick publishes AnimationState.SpeedbrakeAnim
+                 (GetDsbPos(ofNorm)) and USpeedbrakeControlChannel republishes it as
+                 AnimationInput.Speedbrake (range 0..1, neutral 0).
+             Do NOT add smoothing on the animation side: the travel time is set HERE only.
+             The traverse times are the single place to tune speedbrake travel speed. -->
+        <kinematic name="Speedbrake Control">
+            <input>fcs/speedbrake-cmd-norm</input>
+            <traverse>
+                <setting>
+                    <position> 0.0 </position>
+                    <time> 0.0 </time>
+                </setting>
+                <setting>
+                    <position> 1.0 </position>
+                    <time> 0.6 </time>
+                </setting>
+            </traverse>
+            <output>fcs/speedbrake-pos-norm</output>
+            </kinematic>
+    </channel>
+ 
+   <channel name="Wheel Brakes">
+        <kinematic name="Left Brake Control">
+            <input>fcs/left-brake-input-norm</input>
+            <traverse>
+                <setting>
+                    <position> 0.0 </position>
+                    <time> 0.0 </time>
+                </setting>
+                <setting>
+                    <position> 1.0 </position>
+                    <time> 2.5 </time> 
+                </setting>
+            </traverse>
+            <output>fcs/left-brake-cmd-norm</output> 
+        </kinematic>
+
+        <kinematic name="Right Brake Control">
+            <input>fcs/right-brake-input-norm</input>
+            <traverse>
+                <setting>
+                    <position> 0.0 </position>
+                    <time> 0.0 </time>
+                </setting>
+                <setting>
+                    <position> 1.0 </position>
+                    <time> 2.5 </time>
+                </setting>
+            </traverse>
+            <output>fcs/right-brake-cmd-norm</output>
+        </kinematic>
+    </channel>
+
+</flight_control>
