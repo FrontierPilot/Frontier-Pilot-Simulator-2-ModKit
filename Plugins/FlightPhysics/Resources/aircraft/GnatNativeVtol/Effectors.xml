@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<system name="Effectors">
+  <channel name="Throttle Conrollers">
+
+    <actuator name="Front Right">
+      <input>fcs/cmd_engine_FR_nd</input>
+      <clipto>
+        <min>0.0</min>
+        <max>1.0</max>
+      </clipto>
+      <output>fcs/throttle-cmd-norm[0]</output>
+    </actuator>
+
+    <actuator name="Front Left">
+      <input>fcs/cmd_engine_FL_nd</input>
+      <clipto>
+        <min>0.0</min>
+        <max>1.0</max>
+      </clipto>
+      <output>fcs/throttle-cmd-norm[1]</output>
+    </actuator>
+
+    <actuator name="Tail Right">
+      <input>fcs/cmd_engine_TR_nd</input>
+      <clipto>
+        <min>0.0</min>
+        <max>1.0</max>
+      </clipto>
+      <output>fcs/throttle-cmd-norm[2]</output>
+    </actuator>
+
+    <actuator name="Tail Left">
+      <input>fcs/cmd_engine_TL_nd</input>
+      <clipto>
+        <min>0.0</min>
+        <max>1.0</max>
+      </clipto>
+      <output>fcs/throttle-cmd-norm[3]</output>
+    </actuator>
+
+    </channel>
+</system>
